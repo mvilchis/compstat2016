@@ -30,7 +30,8 @@ shinyUI(fluidPage(
 
     # Show a plot of the generated distribution
     mainPanel(
-      plotlyOutput("trendPlot")
+      plotlyOutput("trendPlot"),
+      textOutput("chi")
     )
   )
 ))
