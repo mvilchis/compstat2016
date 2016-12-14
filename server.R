@@ -1,6 +1,7 @@
 library(shiny)
+library(shinydashboard)
 library(plotly)
-setwd("~/Documents/compstat2016/todas_las_tareas")
+setwd("~/Documents/compstat2016/")
 
 shinyServer(function(input, output, session) { 
   ###########  Tarea 1  ######################
@@ -43,9 +44,9 @@ shinyServer(function(input, output, session) {
     
   ############ Fin Tarea 1 #########################
     
-  ############# Tarea 2 ############################
+    ############# Tarea 2 ############################
     
-  
+    
     
     
     
@@ -62,7 +63,7 @@ shinyServer(function(input, output, session) {
       return(((b[1]-a[1])/(2*n))*sum(fi[-1]+fi[-(n+1)]))
     }
     
-   
+    
     
     calcula_montecarlo <- function(){
       
@@ -71,7 +72,7 @@ shinyServer(function(input, output, session) {
         eval(parse(text = texto))
         aux
       })
-
+      
       minimo <-{}
       maximo <-  {}
       trapecio_list <-  {}
@@ -110,19 +111,18 @@ shinyServer(function(input, output, session) {
     output$tabla_mc <- renderDataTable({
       calcula_montecarlo()
     },  options = list(lengthMenu = c(5, 30, 50), pageLength = 5))
-      
-    ################## Fin Tarea 2 #######################
     
+    ################## Fin Tarea 2 #######################
     ################### Tarea 3 ########################
     output$tabla_regresion <- renderDataTable({
-       read.csv('./data/train.csv')
+      read.csv('./data/train.csv')
     },  options = list(lengthMenu = c(5, 30, 50), pageLength = 5))
     
     tabla <- data.frame(read.csv('./data/train.csv'))
     output$scatter_variables <- renderPlotly({
       if(input$dep == 'dis') {
-      plot_ly() %>% 
-        add_trace(data=tabla, x = ~DISNEY, y = ~PROYECCION, type="scatter", mode="markers") 
+        plot_ly() %>% 
+          add_trace(data=tabla, x = ~DISNEY, y = ~PROYECCION, type="scatter", mode="markers") 
       }else {
         plot_ly() %>% 
           add_trace(data=tabla, x = ~PROYECCION, y = ~DISNEY, type="scatter", mode="markers") 
@@ -151,6 +151,7 @@ shinyServer(function(input, output, session) {
     })
     
     ################### Fin tarea 3 ####################
+    
     #################### Tarea 4 #######################
     Rcpp::sourceCpp("funciones.cpp")
     output$scatter_variables_p2 <- renderPlotly({
@@ -191,12 +192,12 @@ shinyServer(function(input, output, session) {
     },  options = list(lengthMenu = c(5, 30, 50), pageLength = 5))
     
     
-  
+    
     
     
     
     #################### Fin tarea 4 ###################
-      
+  
     
     
     
