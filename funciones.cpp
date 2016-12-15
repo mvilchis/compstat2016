@@ -39,7 +39,7 @@ double logPriori(NumericVector theta){
   double b = theta[1];
   double sd = theta[2];
   
-  double a_ = R::dunif(a, -1000, 1000, true);
+  double a_ = R::dunif(a, -10, 10, true);
   double b_ = R::dnorm(b, -1000, 1000, true);
   double sd_ = R::dunif(sd, -1000,1000,true);
   double aux = a_+b_+sd_;

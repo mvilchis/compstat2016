@@ -25,7 +25,7 @@ shinyServer(function(input, output, session) {
       real_exp <-rexp(input$iterations,rate=input$lambda)
       min_x = min(distribucion_exponencial)
       max_x = max(distribucion_exponencial)
-      chi<- sum(get_chi_squared(distribucion_exponencial, real_exp))
+      chi<- sum(get_chi_squared(distribucion_exponencial, real_exp))/1000
       output$chi = renderText({paste("Prueba de bondad Chi cuadrado: ",toString(chi))})
       output$tabla = renderDataTable({
         cbind(distribucion_exponencial,distribucion_uniforme)
@@ -57,6 +57,24 @@ shinyServer(function(input, output, session) {
       }
       return(((b[1]-a[1])/(2*n))*sum(fi[-1]+fi[-(n+1)]))
     }
+    output$montecarlo_plot_dis <- renderPlot({
+      funcion_value  <- eval(parse(text = input$fun))
+      
+      nn <- input$n_sim
+      from <- input$inf
+      to <- input$sup
+      to2 <- to - from
+      u1 <- runif(nn, from, to)
+      aux <- funcion_value(u1)
+      aux[is.nan(aux)] <- 0
+      curve(funcion_value, from=from, to=to)
+      aux <- funcion_value(seq(from, to))
+      aux[is.nan(aux)] <- 0
+      mn <- min(aux)
+      mx <- max(aux)
+      points(u1, runif(input$n_sim, mn, mx))
+    })
+    
     calcula_montecarlo <- function(){
       
       funcion_value  <- reactive({
@@ -212,12 +230,14 @@ shinyServer(function(input, output, session) {
     
     ################### Fin tarea 3 ####################
     
-    #################### Tarea 4 #######################
+    #################### Tarea 4 ,5,6,#######################
     Rcpp::sourceCpp("funciones.cpp")
+    chain <- {}
     
-    
-    
-    calcula_regresion <- function(){
+    calcula_regresion <- function( update_mc =FALSE){
+      if (!is.null(chain) & !update_mc) {
+        return(chain)
+      }
       if(input$dep != 'dis') {
         y_mc <- tabla$X
         x_mc <- tabla$Y
@@ -225,26 +245,74 @@ shinyServer(function(input, output, session) {
         x_mc <- tabla$X
         y_mc <- tabla$Y
       }
-      
       theta0 <- c(1,1,1)
       chain <- runMCMC(x=x_mc, y=y_mc, startValue=theta0, iterations=input$l_cadena)
       chain <-  data.frame(a=chain[,1], b=chain[,2], sd=chain[,3])
-      for (i in 1:input$n_cadena-1){
+      for (i in 1:(input$n_cadena)){
         aux <- theta0 + round(10*runif(1))
         run_m_1 <- runMCMC(x=x_mc, y=y_mc, startValue=aux, iterations=input$l_cadena)
         run_m_1 <- data.frame(a=run_m_1[,1], b=run_m_1[,2], sd=run_m_1[,3])
-        chain <- rbind(chain, run_m_1)
+        if (input$n_cadena >= 2) {
+          chain <- cbind(chain, run_m_1)  
+        }
       }
       return(chain)
-      
-     
     }
     df <- eventReactive(input$run_mcmc_b, {
-      return (calcula_regresion())
+      return (calcula_regresion(update_mc = TRUE))
     })
     
-    output$cadenasMCMC <- renderDataTable({calcula_regresion()})
+    output$cadenasMCMC <- renderDataTable({print(calcula_regresion())
+      calcula_regresion()} ,options = list(lengthMenu = c(5, 30, 50), pageLength = 5))
     
+    
+    output$posterior_a <- renderPlotly({
+        chain <- calcula_regresion()
+        mean_a <- mean(chain[,1])
+        
+        plot_ly(x = chain[,1], 
+                type = "histogram", opacity = .3, marker = list( color= "#006080"))%>%
+          layout(                        
+            title = paste("Histograma posteriori a : ", mean_a, sep=),
+            xaxis = list(
+              title = " Parametro a",     
+              showgrid = T),      
+            yaxis = list(           
+              title = "Posteriori(a)")) 
+        
+      })
+    output$posterior_b <- renderPlotly({
+      chain <- calcula_regresion()
+      mean_b <- mean(chain[,2])
+      
+      plot_ly(x = chain[,2], 
+              type = "histogram", opacity = .3, marker = list( color= "#006080"))%>%
+        layout(                        
+          title = paste("Histograma posteriori b: ", mean_b, sep=""),
+          xaxis = list(
+            title = " Parametro b",     
+            showgrid = T),      
+          yaxis = list(           
+            title = "Posteriori(b)")) 
+      
+    })
+    output$posterior_sigma <- renderPlotly({
+      chain <- calcula_regresion()
+      mean_sigma <- mean(chain[,3])
+      dens_a <- density(chain[,3])
+      
+      plot_ly(x = chain[,3], 
+              type = "histogram", opacity = .3, marker = list( color= "#006080"))%>%
+        layout(                        
+          title = paste("Histograma posteriori sigma", mean_sigma, sep = "\n"),
+          xaxis = list(
+            title = " Parametro sigma",     
+            showgrid = T),      
+          yaxis = list(           
+            title = "Posteriori(a)")) 
+    })
+    
+   
     
     
     

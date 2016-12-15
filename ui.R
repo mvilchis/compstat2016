@@ -8,13 +8,13 @@ setwd("~/Documents/compstat2016/")
 dashboardPage(
   
   # Dashboard header
-  dashboardHeader(title = "Tareas de estadistica Computacional"),
+  dashboardHeader(title = "Tareas de estadistica Computacional",titleWidth = 250),
   
   dashboardSidebar(
     sidebarMenu(
       
-      #menuItem("Tarea 01", tabName = "tarea_1", icon = icon("unlock")),
-      #menuItem("Tarea 02", tabName = "tarea_2", icon = icon("unlock")),
+      menuItem("Tarea 01", tabName = "tarea_1", icon = icon("unlock")),
+      menuItem("Tarea 02", tabName = "tarea_2", icon = icon("unlock")),
       menuItem("Tarea 04, 05 y 06", tabName = "tarea_4_5_6", icon = icon("unlock"))
 
     )
@@ -45,7 +45,8 @@ dashboardPage(
                                 max= 100,
                                 value= 50),
                     downloadButton('downloadData', 'Descarga muestra')
-                  )
+                  ),
+                  column(6, verbatimTextOutput("chi"))
               ),
               # Second Row
               fluidRow(
@@ -65,10 +66,11 @@ dashboardPage(
                   numericInput("n_sim","Numero de simulaciones",value = 10),
                   textInput("fun","funcion",value = "function (x) x*3", placeholder = "Funcion a integrar"),
                   numericInput("confianza", "Intervalo de confianza ", min = 0, max = 1,value = 0.20)
-                )
+                ),
+                column(6, plotOutput("montecarlo_plot_dis",height = 400))
               ),
               fluidRow(
-                column(6, plotOutput("montecarlo_plot",height = 500)),
+                column(6, plotOutput("montecarlo_plot",height = 400)),
                 column(6, dataTableOutput("tabla_mc"))
                 
               )
@@ -86,7 +88,7 @@ dashboardPage(
                 sidebarPanel(
                   titlePanel("Parametros MCMC"),
                   numericInput("n_cadena", "cadenas a simular", value=1, min=1, max=10, step=1),
-                  sliderInput("l_cadena", "longitud de cadenas", min=1000, max=10000, value=1000),
+                  sliderInput("l_cadena", "longitud de cadenas", min=10000, max=100000, value=10000),
                   actionButton("run_mcmc_b", "Calcula MCMC")
                   
                 )
@@ -100,6 +102,11 @@ dashboardPage(
                                        
                                      )
                                      ),
+                            tabPanel("Cadenas",
+                                     fluidRow(
+                                       dataTableOutput("cadenasMCMC")
+                                     )
+                            ),
                           tabPanel("Histograma a priori", 
                                    fluidRow(
                                      column(4, plotlyOutput("histo_a",height = 500)),
@@ -108,11 +115,16 @@ dashboardPage(
                            
                             )
                         ),
-                        tabPanel("Cadenas",
+                        tabPanel("Histograma  posteriori", 
                                  fluidRow(
-                                   dataTableOutput("cadenasMCMC")
+                                   column(4, plotlyOutput("posterior_a",height = 500)),
+                                   column(4, plotlyOutput("posterior_b",height = 500)),
+                                   column(4, plotlyOutput("posterior_sigma",height = 500))
+                                   
                                  )
-                                 )
+                                 
+                        )
+                        
               )
               )
               
