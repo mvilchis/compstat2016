@@ -4,7 +4,7 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 double getpi() {
   return M_PI; 
-  }
+}
 
 // [[Rcpp::export]]
 double loglikelihood(NumericVector theta, NumericVector X, NumericVector Y){
@@ -17,7 +17,7 @@ double loglikelihood(NumericVector theta, NumericVector X, NumericVector Y){
   for(int i=0; i < n; i++){
     yy[i] = a*X[i] + b ;
   }
-
+  
   NumericVector singleLikelihood(n);
   double num;
   double den;
@@ -26,6 +26,7 @@ double loglikelihood(NumericVector theta, NumericVector X, NumericVector Y){
     num = exp(-pow((Y[i]-yy[i]), 2.0)/(2*sd*sd));
     den = sd*sqrt(2*getpi());
     singleLikelihood[i] = log(num/den);
+    //singleLikelihood[i] = R::dnorm(Y[i], yy[i], sd, true);
   }
   
   double sumAll = sum(singleLikelihood);
@@ -38,9 +39,9 @@ double logPriori(NumericVector theta){
   double b = theta[1];
   double sd = theta[2];
   
-  double a_ = R::dunif(a, 0, 50, true);
-  double b_ = R::dnorm(b, 0, 5, true);
-  double sd_ = R::dunif(sd, 0, 50,true);
+  double a_ = R::dunif(a, -1000, 1000, true);
+  double b_ = R::dnorm(b, -1000, 1000, true);
+  double sd_ = R::dunif(sd, -1000,1000,true);
   double aux = a_+b_+sd_;
   return(aux);
 }
@@ -59,9 +60,9 @@ NumericVector proposal(NumericVector theta){
   double b = theta[1];
   double sd = theta[2];
   
-  double p1 = R::rnorm(a,  0.1);
-  double p2 = R::rnorm(b,  0.5);
-  double p3 = R::rnorm(sd, 0.3);
+  double p1 = R::rnorm(a,1135);
+  double p2 = R::rnorm(b,1135);
+  double p3 = R::rnorm(sd,1135);
   
   NumericVector aux(3);
   aux[0] = p1;
@@ -81,7 +82,7 @@ NumericMatrix runMCMC(NumericVector x, NumericVector y, NumericVector startValue
   NumericVector aux(3);
   double probab;
   for(int i=0; i < iterations; i++){
-    for(int j=0; j < 3; j++){            
+    for(int j=0; j < 3; j++){            //auxiliar, vector parametros
       aux[j] = chain(i, j);
     }
     prop = proposal(aux);
@@ -93,30 +94,8 @@ NumericMatrix runMCMC(NumericVector x, NumericVector y, NumericVector startValue
     }else{
       for(int j=0; j < startValue.length(); j++){
         chain(i+1, j) = chain(i,j);
-       }
       }
     }
-    return(chain);
+  }
+  return(chain);
 }
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 

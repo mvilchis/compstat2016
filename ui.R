@@ -13,11 +13,10 @@ dashboardPage(
   dashboardSidebar(
     sidebarMenu(
       
-      menuItem("Tarea 01", tabName = "tarea_1", icon = icon("unlock")),
-      menuItem("Tarea 02", tabName = "tarea_2", icon = icon("unlock")),
-      menuItem("Tarea 04", tabName = "tarea_3", icon = icon("unlock")),
-      menuItem("Tarea 05", tabName = "tarea_4", icon = icon("unlock"))
-      
+      #menuItem("Tarea 01", tabName = "tarea_1", icon = icon("unlock")),
+      #menuItem("Tarea 02", tabName = "tarea_2", icon = icon("unlock")),
+      menuItem("Tarea 04, 05 y 06", tabName = "tarea_4_5_6", icon = icon("unlock"))
+
     )
   ),
   
@@ -74,37 +73,49 @@ dashboardPage(
                 
               )
       ),
-      # Third menu tab
-      tabItem("tarea_3", 
-              fluidRow(
-                
-                sidebarPanel(
-                  selectInput("dep", "Variable dependiente", c("Disney" = "dis", "Proyeccion" = "pro")),
-                  sliderInput("a", " Parametro a priori a ~ Unif ", min=1, max=10, value=c(1,10)),
-                  sliderInput("b", "Parametro a priori b ~ Unif", min=1, max=10, value=c(1,10)),
-                  sliderInput("sigma", "Parametro a priori sigma ~ Unif",  min=1, max=10, value=c(1,10))
-                )),
-              fluidRow(
-                column(6, plotlyOutput("scatter_variables",height = 500)),
-                column(6, dataTableOutput("tabla_regresion"))
-              )),
-      tabItem("tarea_4", 
+      
+      tabItem("tarea_4_5_6", 
               fluidRow(
                 sidebarPanel(
                   titlePanel("Parametros a priori"),
-                  selectInput("dep_p2", "Variable dependiente", c("Disney" = "dis", "Proyeccion" = "pro")),
-                  sliderInput("a_p2", " Parametro a priori a ~ Unif ", min=1, max=10, value=c(1,10)),
-                  sliderInput("b_p2", "Parametro a priori b ~ Unif", min=1, max=10, value=c(1,10)),
-                  sliderInput("sigma_p2", "Parametro a priori sigma ~ Unif",  min=1, max=10, value=c(1,10))
+                  selectInput("dep", "Variable dependiente", c("X" = "dis", "Y" = "pro")),
+                  sliderInput("a", " Parametro a priori a ~ Unif ", min=1, max=10, value=c(1,10)),
+                  sliderInput("b", "Parametro a priori b ~ Unif", min=1, max=10, value=c(1,10)),
+                  sliderInput("sigma", "Parametro a priori sigma ~ Unif",  min=1, max=10, value=c(1,10))
                 ),
                 sidebarPanel(
-                  titlePanel("Parametros, MCMC"),
+                  titlePanel("Parametros MCMC"),
                   numericInput("n_cadena", "cadenas a simular", value=1, min=1, max=10, step=1),
                   sliderInput("l_cadena", "longitud de cadenas", min=1000, max=10000, value=1000),
                   actionButton("run_mcmc_b", "Calcula MCMC")
                   
                 )
+              ),
+              fluidRow(
+                tabsetPanel(type="tabs",
+                            tabPanel("Datos", 
+                                     fluidRow(
+                                       column(6, plotlyOutput("scatter_variables",height = 500)),
+                                       column(6, dataTableOutput("tabla_regresion"))
+                                       
+                                     )
+                                     ),
+                          tabPanel("Histograma a priori", 
+                                   fluidRow(
+                                     column(4, plotlyOutput("histo_a",height = 500)),
+                                     column(4, plotlyOutput("histo_b",height = 500)),
+                                     column(4, plotlyOutput("histo_sigma",height = 500))
+                           
+                            )
+                        ),
+                        tabPanel("Cadenas",
+                                 fluidRow(
+                                   dataTableOutput("cadenasMCMC")
+                                 )
+                                 )
               )
+              )
+              
       )
     
     ) # end tab items

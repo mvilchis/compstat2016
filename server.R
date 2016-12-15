@@ -45,11 +45,6 @@ shinyServer(function(input, output, session) {
   ############ Fin Tarea 1 #########################
     
     ############# Tarea 2 ############################
-    
-    
-    
-    
-    
     trapecio <- function(n,a, b,FUN){
       dim <- length(a)
       x <- seq(a[1], b[1], (b[1]-a[1])/n)
@@ -62,9 +57,6 @@ shinyServer(function(input, output, session) {
       }
       return(((b[1]-a[1])/(2*n))*sum(fi[-1]+fi[-(n+1)]))
     }
-    
-    
-    
     calcula_montecarlo <- function(){
       
       funcion_value  <- reactive({
@@ -122,76 +114,136 @@ shinyServer(function(input, output, session) {
     output$scatter_variables <- renderPlotly({
       if(input$dep == 'dis') {
         plot_ly() %>% 
-          add_trace(data=tabla, x = ~DISNEY, y = ~PROYECCION, type="scatter", mode="markers") 
+          add_trace(data=tabla, x = ~X, y = ~Y, type="scatter", mode="markers") 
       }else {
         plot_ly() %>% 
-          add_trace(data=tabla, x = ~PROYECCION, y = ~DISNEY, type="scatter", mode="markers") 
+          add_trace(data=tabla, x = ~Y, y = ~X, type="scatter", mode="markers") 
       }
       
     })
     
-    create_histogram <- function(distribution, min, max, name) {
-      plot_ly(x = distribution, 
-              xbins = list(
-                end = max, 
-                size = (max-min)/input$nbins, 
-                start = min
-              ),
-              autobinx = FALSE,
-              type = "histogram", opacity = .3, name = name) 
-    }
-    
-    
-    output$histo_a <- renderPlot({
+    output$histo_a <- renderPlotly({
       n <- dim(tabla)[1]
       dist_a <- runif(n, min=input$a[1], max = input$a[2])
-      hist(dist_a)
+      max_x <- input$a[2]
+      min_x <- input$a[1]
+      plot_ly(x = dist_a, 
+              xbins = list(
+                end = max_x, 
+                size = (max_x-min_x)/input$nbins, 
+                start = min_x
+              ),
+              autobinx = FALSE,
+              type = "histogram", opacity = .3, name = 'Histograma a')
+    })
+    
+    get_priori <- function(n_items, min,max){
+      runif(n_items, min=min, max = max)
+    }
+    
+    output$histo_sigma <- renderPlotly({
+      n <- dim(tabla)[1]
+      max_x <- input$sigma[2]
+      min_x <- input$sigma[1]
+      distribucion <- get_priori(n, min_x, max_x)
       
+      plot_ly(x = distribucion, 
+              xbins = list(
+                end = max_x, 
+                size = (max_x-min_x)/input$nbins, 
+                start = min_x
+              ),
+              autobinx = FALSE,
+              type = "histogram", opacity = .3,  marker = list(  color="#66d9ff"))%>%
+        layout(                        
+          title = "Histograma sigma",
+          xaxis = list(
+            title = " Parametro sigma",     
+            showgrid = T),      
+          yaxis = list(           
+            title = "Unif(sigma)"))
+    })
+    
+    output$histo_b <- renderPlotly({
+      n <- dim(tabla)[1]
+      max_x <- input$b[2]
+      min_x <- input$b[1]
+      distribucion <- get_priori(n, min_x, max_x)
       
+      plot_ly(x = distribucion, 
+              xbins = list(
+                end = max_x, 
+                size = (max_x-min_x)/input$nbins, 
+                start = min_x
+              ),
+              autobinx = FALSE,
+              type = "histogram", opacity = .3, name = 'Histograma b', marker = list(color="#0099cc"))%>%
+        layout(                        
+          title = "Histograma b",
+          xaxis = list(
+            title = " Parametro b",     
+            showgrid = T),      
+          yaxis = list(           
+            title = "Unif(b)"))
+    })
+    
+    output$histo_a <- renderPlotly({
+      n <- dim(tabla)[1]
+      max_x <- input$a[2]
+      min_x <- input$a[1]
+      distribucion <- get_priori(n, min_x, max_x)
+      
+      plot_ly(x = distribucion, 
+              xbins = list(
+                end = max_x, 
+                size = (max_x-min_x)/input$nbins, 
+                start = min_x
+              ),
+              autobinx = FALSE,
+              type = "histogram", opacity = .3, marker = list( color= "#006080"))%>%
+        layout(                        
+          title = "Histograma a",
+          xaxis = list(
+            title = " Parametro a",     
+            showgrid = T),      
+          yaxis = list(           
+            title = "Unif(a)"))
     })
     
     ################### Fin tarea 3 ####################
     
     #################### Tarea 4 #######################
     Rcpp::sourceCpp("funciones.cpp")
-    output$scatter_variables_p2 <- renderPlotly({
-      if(input$dep_p2 == 'dis') {
-        plot_ly() %>% 
-          add_trace(data=tabla, x = ~DISNEY, y = ~PROYECCION, type="scatter", mode="markers") 
+    
+    
+    
+    calcula_regresion <- function(){
+      if(input$dep != 'dis') {
+        y_mc <- tabla$X
+        x_mc <- tabla$Y
       }else {
-        plot_ly() %>% 
-          add_trace(data=tabla, x = ~PROYECCION, y = ~DISNEY, type="scatter", mode="markers") 
+        x_mc <- tabla$X
+        y_mc <- tabla$Y
       }
       
-    })
-    calcula_regresion <-function(){
-      if(input$dep_p2 == 'dis') {
-        y_mc <- tabla$DISNEY
-        x_mc <- tabla$PROYECCION
-      }else {
-        x_mc <- tabla$PROYECCION
-        y_mc <- tabla$DISNEY
-      }
-      
-      theta0 <- c(2,1,1)
+      theta0 <- c(1,1,1)
       chain <- runMCMC(x=x_mc, y=y_mc, startValue=theta0, iterations=input$l_cadena)
-      chain <- data.frame(a=chain[,1], b=chain[,2], sd=chain[,3])
+      chain <-  data.frame(a=chain[,1], b=chain[,2], sd=chain[,3])
       for (i in 1:input$n_cadena-1){
         aux <- theta0 + round(10*runif(1))
         run_m_1 <- runMCMC(x=x_mc, y=y_mc, startValue=aux, iterations=input$l_cadena)
         run_m_1 <- data.frame(a=run_m_1[,1], b=run_m_1[,2], sd=run_m_1[,3])
-        chain <- cbind(chain, run_m_1)
+        chain <- rbind(chain, run_m_1)
       }
       return(chain)
+      
+     
     }
     df <- eventReactive(input$run_mcmc_b, {
-      calcula_regresion()
+      return (calcula_regresion())
     })
-    output$cadenasMCMC <- renderDataTable({
-      calcula_regresion()
-    },  options = list(lengthMenu = c(5, 30, 50), pageLength = 5))
     
-    
+    output$cadenasMCMC <- renderDataTable({calcula_regresion()})
     
     
     
